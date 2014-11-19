@@ -1,5 +1,5 @@
 {
-    "name": "CarisCommcare Bridge",
+    "name": "CarisCommcareBridge",
     "description": "Accepts cases and forms from CommCare using forwarding feature. It sends email to concerned co-ordinator (using mandrill api)",
     "author": "Piyush Madan <madanpiyush@gmail.com>",
     "dependencies": {
