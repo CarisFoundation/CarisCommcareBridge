@@ -50,6 +50,8 @@ http.createServer(function(req, res) {
         console.log('Plan of action: '+ form_data['plan_of_action']);
         console.log("Access patient details at " + COMMCARE_URL + "reports/case_data/" + case_data['case_id'] + '/#!history');
 
+        console.log("List of visits by health agent:" + meta_data['n1:username'][0]);
+        console.log("reports/submit_history/" + "?emw=u__" + meta_data['n1:userID']);
         //For debugging
         // for(var i in form_data) {
         //     if(typeof(i)!=="object"){
