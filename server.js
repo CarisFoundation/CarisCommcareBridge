@@ -3,13 +3,65 @@ var app = express();
 var util = require('util');
 var fs = require('fs');
 var xml2js = require('xml2js');
+var config = require('./config.js');
 
-
-SERVER_ADDRESS = "";
-SERVER_PORT = 3000;
-COMMCARE_URL = "https://www.commcarehq.org/a/caris-test/";
 
 var http = require('http');
+
+var send_alert = function (msg) {
+
+    //Documentation at : https://mandrillapp.com/api/docs/messages.nodejs.html#method=send
+    var mandrill = require('mandrill-api/mandrill');
+    var mandrill_client = new mandrill.Mandrill(config.mandrill.clientId);
+
+    console.log(msg);
+
+    var message = {
+        "html": msg.body,
+        "text": "Here should be a information about ODK Visit",
+        "subject": msg.title,
+        "from_email": "automated@hivhaiti.org",
+        "from_name": "Caris Foundation - HIVHAITI",
+        "to":  msg.receipent,
+        "headers": {
+            "Reply-To": "support@hivhaiti.org"
+        },
+        "important": false,
+        "track_opens": null,
+        "track_clicks": null,
+        "auto_text": null,
+        "auto_html": null,
+        "inline_css": null,
+        "url_strip_qs": null,
+        "preserve_recipients": null,
+        "view_content_link": null,
+        "bcc_address": "admin@hivhaiti.org",
+        "tracking_domain": null,
+        "signing_domain": null,
+        "return_path_domain": null,
+        "tags": [
+            "Notification",
+            "odkVisits"
+        ]
+    };
+    var async = false;
+    var ip_pool = "Main Pool";
+    //Scheduling is allowed only for paid subscribers
+    //var send_at = "2014-03-20 09:46:00";
+    mandrill_client.messages.send({
+        "message": message,
+        "async": async,
+        "ip_pool": ip_pool
+    }, function (result) {
+        console.log(result);
+
+    }, function (e) {
+        // Mandrill returns the error as an object with name and message keys
+        console.log('A mandrill error occurred: ' + e.name + ' - ' + e.message);
+    });
+}
+
+
 http.createServer(function(req, res) {
 
     console.log(req);
@@ -41,28 +93,46 @@ http.createServer(function(req, res) {
         case_data = form_data['n0:case'][0]['$'];
         meta_data = form_data['n1:meta'][0];
 
+        var msg = new Object();
+        msg.title = "";
+        msg.body = "";
+        //For TEST
+        msg.receipent = [{
+            "email": "madanpiyush@gmail.com",
+            "type": "to"
+            }];
+
         if(form_data['health_status']==2){
             console.log("ATTENTION: PATIENT IS UNWELL");
+            msg.subject+= "[ALERT] ";   
         } 
 
-        console.log(meta_data['n1:username'][0] + ' has made a visit to ' + form_data['patient_code']);
-        console.log('Reason of visit: '+ form_data['type_of_visit']);
-        console.log('Plan of action: '+ form_data['plan_of_action']);
-        console.log("Access patient details at " + COMMCARE_URL + "reports/case_data/" + case_data['case_id'] + '/#!history');
+        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + form_data['patient_code'] + '<br>';
+        msg.body+= 'Reason of visit: ' + form_data['type_of_visit'] + '<br>';
+        msg.body+= 'Plan of action: ' + form_data['plan_of_action'] + '<br>';
+        msg.body+= "Access patient details at " + config.commcare.host + "reports/case_data/" + case_data['case_id'] + '/#!history'+ '<br>';
 
-        console.log("List of visits by health agent:" + meta_data['n1:username'][0]);
-        console.log("reports/submit_history/" + "?emw=u__" + meta_data['n1:userID']);
+        msg.body+= "List of visits by health agent:" + meta_data['n1:username'][0] + '<br>';
+        msg.body+= config.commcare.host + "reports/submit_history/" + "?emw=u__" + meta_data['n1:userID'] + '<br>';
+
+        //TODO: Add if urgent in patient_code
+        msg.title+= "Visit for " + form_data['patient_code'] + " by " + meta_data['n1:username'][0];
+
+//        send_alert(b);
+
         //For debugging
         // for(var i in form_data) {
         //     if(typeof(i)!=="object"){
         //         console.log(i + ": " + result['data'][i]);
         //     }
         // }
-            console.log('Done');
-        });
+        console.log(msg);
+        send_alert(msg);
 
         res.end("Received");
+        });
+
     });
 
-}).listen(SERVER_PORT);
-console.log('Server running at ' + SERVER_ADDRESS + ':' + SERVER_PORT);
+}).listen(config.server.port);
+console.log('Server running at ' + config.server.address + ':' + config.server.port);
