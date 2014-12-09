@@ -8,7 +8,8 @@ config = {
 	},
 	commcare: {
 		host: "https://www.commcarehq.org/a/caris-test/"
-	}
+	},
+	environment: "development"
 }
 
 module.exports = config;
