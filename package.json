@@ -5,7 +5,8 @@
     "dependencies": {
         "mandrill-api": ">= 1.0.39",
         "express": "4.x",
-        "fs" : "",
-        "xml2js": ""
+        "fs" : "0.0.2",
+        "xml2js": "0.4.4",
+        "mongoose": "3.8.20",
     }
 }
