@@ -5,6 +5,7 @@ var fs = require('fs');
 var xml2js = require('xml2js');
 var config = require('./config.js');
 
+var db = require('./db.js');
 
 var http = require('http');
 
@@ -44,7 +45,7 @@ var send_alert = function (msg) {
             "odkVisits"
         ]
     };
-    var async = false;
+    var async = true;
     var ip_pool = "Main Pool";
     //Scheduling is allowed only for paid subscribers
     //var send_at = "2014-03-20 09:46:00";
@@ -97,22 +98,19 @@ http.createServer(function(req, res) {
         msg.title = "";
         msg.body = "";
         //For TEST
-        msg.receipent = [{
-            "email": "madanpiyush@gmail.com",
-            "type": "to"
-            }];
+        msg.receipent = [];
 
         if(form_data['health_status']==2){
-            console.log("ATTENTION: PATIENT IS UNWELL");
-            msg.subject+= "[ALERT] ";   
+//            console.log("ATTENTION: PATIENT IS UNWELL");
+            msg.title+= "[ALERT] ";   
         } 
 
-        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + form_data['patient_code'] + '<br>';
-        msg.body+= 'Reason of visit: ' + form_data['type_of_visit'] + '<br>';
-        msg.body+= 'Plan of action: ' + form_data['plan_of_action'] + '<br>';
-        msg.body+= "Access patient details at " + config.commcare.host + "reports/case_data/" + case_data['case_id'] + '/#!history'+ '<br>';
+        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + form_data['patient_code'] + '<br><br>';
+        msg.body+= 'Reason of visit: ' + form_data['type_of_visit'] + '<br><br>';
+        msg.body+= 'Plan of action: ' + form_data['plan_of_action'] + '<br><br>';
+        msg.body+= "Access patient details at " + config.commcare.host + "reports/case_data/" + case_data['case_id'] + '/#!history'+ '<br><br>';
 
-        msg.body+= "List of visits by health agent:" + meta_data['n1:username'][0] + '<br>';
+        msg.body+= "List of visits by health agent:  " + meta_data['n1:username'][0] + '<br>';
         msg.body+= config.commcare.host + "reports/submit_history/" + "?emw=u__" + meta_data['n1:userID'] + '<br>';
 
         //TODO: Add if urgent in patient_code
@@ -127,9 +125,14 @@ http.createServer(function(req, res) {
         //     }
         // }
         console.log(msg);
-        send_alert(msg);
-
         res.end("Received");
+
+        db.findAlertEmail(meta_data['n1:username'][0], function(email) {
+            msg.receipent = email;
+            console.log("receipent--->");
+            console.log(msg.receipent);
+            send_alert(msg);
+            });
         });
 
     });
