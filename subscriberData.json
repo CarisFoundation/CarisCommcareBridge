@@ -1,0 +1,28 @@
+{
+    "development": [{
+        "username": "test",
+        "alert_email": [{
+            "name": "TEST",
+            "email": "madanpiyush@gmail.com",
+            "type": "to"
+        }, {
+            "name": "TEST 2",
+            "email": "madan.piyush@gmail.com",
+            "type": "to"
+        }]
+    }, {
+        "username": "test2",
+        "alert_email": [{
+            "name": "TEST 3",
+            "email": "madanpiy.ush@gmail.com",
+            "type": "to"
+        }, {
+            "name": "TEST 4 ",
+            "email": "m.adanpiyush@gmail.com",
+            "type": "to"
+        }]
+    }],
+    "production": [{
+
+    }]
+}
