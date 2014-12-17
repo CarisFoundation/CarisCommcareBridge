@@ -100,12 +100,12 @@ http.createServer(function(req, res) {
         //For TEST
         msg.receipent = [];
 
-        if(form_data['health_status']==2){
+        if(form_data['health_status']==2 || form_data['patient_health_status']==2){
 //            console.log("ATTENTION: PATIENT IS UNWELL");
             msg.title+= "[ALERT] ";   
         } 
 
-        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + form_data['patient_code'] + '<br><br>';
+        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + (form_data['patient_code'] || form_data['health_id']) + '<br><br>';
         msg.body+= 'Reason of visit: ' + form_data['type_of_visit'] + '<br><br>';
         msg.body+= 'Plan of action: ' + form_data['plan_of_action'] + '<br><br>';
         msg.body+= "Access patient details at " + config.commcare.host + "reports/case_data/" + case_data['case_id'] + '/#!history'+ '<br><br>';
@@ -114,7 +114,7 @@ http.createServer(function(req, res) {
         msg.body+= config.commcare.host + "reports/submit_history/" + "?emw=u__" + meta_data['n1:userID'] + '<br>';
 
         //TODO: Add if urgent in patient_code
-        msg.title+= "Visit for " + form_data['patient_code'] + " by " + meta_data['n1:username'][0];
+        msg.title+= "Visit for " + (form_data['patient_code'] || form_data['health_id'])  + " by " + meta_data['n1:username'][0];
 
 //        send_alert(b);
 
