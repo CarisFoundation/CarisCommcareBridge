@@ -90,9 +90,38 @@ http.createServer(function(req, res) {
         parser.parseString(body, function (err, result) {
      //   console.dir(result);
 
+if(result){
         form_data = result['data'];
-        case_data = form_data['n0:case'][0]['$'];
-        meta_data = form_data['n1:meta'][0];
+} else {
+case_data ="";
+meta_data ="";
+console.log("*****************UNABLE TO FIND result so no data in it dont get any data from it****************")
+var process_msg =false;
+
+
+}
+try {
+if(form_data && form_data['n0:case']) {
+        case_data = form_data['n0:case'][0]['$'] || "";
+        meta_data = form_data['n1:meta'][0] || "";
+        var process_msg = true;
+} else {
+case_data ="";
+meta_data ="";
+console.log("*****************UNABLE TO FIND case info, so don't want to process meta info*****************")
+var process_msg = false;
+
+} } catch(e) {
+case_data ="";
+meta_data ="";
+console.log("****************IN TRY CATCH *** case info not found******************");
+console.log("*****************UNABLE TO FIND case info, so don't want to process meta info*****************")
+var process_msg = false;
+
+}
+
+    
+    if(process_msg) {
 
         var msg = new Object();
         msg.title = "";
@@ -100,21 +129,21 @@ http.createServer(function(req, res) {
         //For TEST
         msg.receipent = [];
 
-        if(form_data['health_status']==2){
+        if(form_data['health_status']==2 || form_data['patient_health_status']==2){
 //            console.log("ATTENTION: PATIENT IS UNWELL");
             msg.title+= "[ALERT] ";   
         } 
 
-        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + form_data['patient_code'] + '<br><br>';
-        msg.body+= 'Reason of visit: ' + form_data['type_of_visit'] + '<br><br>';
-        msg.body+= 'Plan of action: ' + form_data['plan_of_action'] + '<br><br>';
+        msg.body+= meta_data['n1:username'][0] + ' has made a visit to ' + (form_data['patient_code'] || form_data['health_id']) + '<br><br>';
+        msg.body+= 'Reason of visit: ' + (form_data['type_of_visit'] || "") + '<br><br>';
+        msg.body+= 'Plan of action: ' + (form_data['plan_of_action'] || "") + '<br><br>';
         msg.body+= "Access patient details at " + config.commcare.host + "reports/case_data/" + case_data['case_id'] + '/#!history'+ '<br><br>';
 
         msg.body+= "List of visits by health agent:  " + meta_data['n1:username'][0] + '<br>';
         msg.body+= config.commcare.host + "reports/submit_history/" + "?emw=u__" + meta_data['n1:userID'] + '<br>';
 
         //TODO: Add if urgent in patient_code
-        msg.title+= "Visit for " + form_data['patient_code'] + " by " + meta_data['n1:username'][0];
+        msg.title+= "Visit for " + (form_data['patient_code'] || form_data['health_id'])  + " by " + meta_data['n1:username'][0];
 
 //        send_alert(b);
 
@@ -124,7 +153,7 @@ http.createServer(function(req, res) {
         //         console.log(i + ": " + result['data'][i]);
         //     }
         // }
-        console.log(msg);
+//        console.log(msg);
         res.end("Received");
 
         db.findAlertEmail(meta_data['n1:username'][0], function(email) {
@@ -132,10 +161,16 @@ http.createServer(function(req, res) {
             console.log("receipent--->");
             console.log(msg.receipent);
             send_alert(msg);
-            });
+            });        
+        } else {
+            res.end("Received. No further alerts sent.");
+
+        }
+
         });
 
     });
 
 }).listen(config.server.port);
 console.log('Server running at ' + config.server.address + ':' + config.server.port);
+
